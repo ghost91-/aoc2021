@@ -15,11 +15,12 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn count_increases(measurements: Vec<i32>) -> i32 {
+fn count_increases(measurements: Vec<i32>) -> usize {
     measurements
         .iter()
         .zip(measurements.iter().skip(1))
-        .fold(0, |a, b| if b.1 > b.0 { a + 1 } else { a })
+        .filter(|pair| pair.1 > pair.0)
+        .count()
 }
 
 #[cfg(test)]
