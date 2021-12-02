@@ -1,42 +1,63 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader, Error, Read};
-
-fn read<R: Read>(io: R) -> Result<Vec<String>, Error> {
-    let br = BufReader::new(io);
-    br.lines().collect()
+enum Command {
+    Forward(i32),
+    Up(i32),
+    Down(i32),
 }
 
-fn parse(input: Vec<String>) -> Vec<(String, i32)> {
+fn parse(input: &str) -> Vec<Command> {
     input
-        .iter()
+        .lines()
         .map(|command| {
-            let direction_and_amount: Vec<&str> = command.split(" ").collect();
-            (
-                direction_and_amount.first().unwrap().to_string(),
-                direction_and_amount
-                    .last()
-                    .map(|i| i.parse::<i32>().unwrap())
-                    .unwrap(),
-            )
+            let mut direction_and_amount = command.split_whitespace();
+            let direction = direction_and_amount.next().expect("no direction");
+            let amount = direction_and_amount
+                .next()
+                .expect("no amount")
+                .parse::<i32>()
+                .expect("amount is not an integer");
+            match direction {
+                "forward" => Command::Forward(amount),
+                "up" => Command::Up(amount),
+                "down" => Command::Down(amount),
+                _ => panic!("unknown direction {}", direction),
+            }
         })
         .collect()
 }
 
-fn calculate_final_position(input: Vec<(String, i32)>) -> i32 {
-    let final_position = input.iter().fold((0, 0, 0), |acc, e| match e.0.as_str() {
-        "down" => (acc.0, acc.1, acc.2 + e.1),
-        "up" => (acc.0, acc.1, acc.2 - e.1),
-        "forward" => (acc.0 + e.1, acc.1 + acc.2 * e.1, acc.2),
-        _ => acc,
-    });
-    final_position.0 * final_position.1
+#[derive(Default)]
+struct Position {
+    horizontal: i32,
+    depth: i32,
+    aim: i32,
 }
 
-fn main() -> Result<(), Error> {
-    let commands = read(File::open("input")?)?;
-    let final_position = calculate_final_position(parse(commands));
+fn calculate_final_position(commands: Vec<Command>) -> i32 {
+    let final_position =
+        commands
+            .iter()
+            .fold(Position::default(), |position, command| match command {
+                Command::Forward(amount) => Position {
+                    horizontal: position.horizontal + amount,
+                    depth: position.depth + position.aim * amount,
+                    ..position
+                },
+                Command::Up(amount) => Position {
+                    aim: position.aim - amount,
+                    ..position
+                },
+                Command::Down(amount) => Position {
+                    aim: position.aim + amount,
+                    ..position
+                },
+            });
+    final_position.horizontal * final_position.depth
+}
+
+fn main() {
+    let input = include_str!("../input");
+    let final_position = calculate_final_position(parse(input));
     println!("{}", final_position);
-    Ok(())
 }
 
 #[cfg(test)]
@@ -45,20 +66,8 @@ mod tests {
 
     #[test]
     fn test() {
-        let commands = parse(
-            vec![
-                "forward 5",
-                "down 5",
-                "forward 8",
-                "up 3",
-                "down 8",
-                "forward 2",
-            ]
-            .iter()
-            .map(|a| a.to_string())
-            .collect(),
-        );
-
-        assert_eq!(calculate_final_position(commands), 900);
+        let input = "forward 5\ndown 5\nforward 8\nup 3\ndown 8\nforward 2";
+        let result = calculate_final_position(parse(input));
+        assert_eq!(result, 900);
     }
 }
