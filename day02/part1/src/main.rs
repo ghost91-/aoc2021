@@ -4,24 +4,42 @@ enum Command {
     Down(i32),
 }
 
-fn parse(input: &str) -> Vec<Command> {
+#[derive(Debug)]
+enum CommandError {
+    ParseAmount(std::num::ParseIntError),
+    ParseFormatting(String),
+}
+
+impl From<std::num::ParseIntError> for CommandError {
+    fn from(e: std::num::ParseIntError) -> Self {
+        CommandError::ParseAmount(e)
+    }
+}
+
+impl std::str::FromStr for Command {
+    type Err = CommandError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split_whitespace().collect();
+        match parts[..] {
+            [direction_string, amount_string] => {
+                let amount = amount_string.parse::<i32>()?;
+                match direction_string {
+                    "forward" => Ok(Command::Forward(amount)),
+                    "up" => Ok(Command::Up(amount)),
+                    "down" => Ok(Command::Down(amount)),
+                    _ => Err(CommandError::ParseFormatting("unknown direction".into())),
+                }
+            }
+            _ => Err(CommandError::ParseFormatting("expected 2 arguments".into())),
+        }
+    }
+}
+
+fn parse(input: &str) -> Result<Vec<Command>, CommandError> {
     input
         .lines()
-        .map(|command| {
-            let mut direction_and_amount = command.split_whitespace();
-            let direction = direction_and_amount.next().expect("no direction");
-            let amount = direction_and_amount
-                .next()
-                .expect("no amount")
-                .parse::<i32>()
-                .expect("amount is not an integer");
-            match direction {
-                "forward" => Command::Forward(amount),
-                "up" => Command::Up(amount),
-                "down" => Command::Down(amount),
-                _ => panic!("unknown direction {}", direction),
-            }
-        })
+        .map(|command_string| command_string.parse::<Command>())
         .collect()
 }
 
@@ -52,10 +70,11 @@ fn calculate_final_position(commands: Vec<Command>) -> i32 {
     final_position.horizontal * final_position.depth
 }
 
-fn main() {
+fn main() -> Result<(), CommandError> {
     let input = include_str!("../input");
-    let final_position = calculate_final_position(parse(input));
+    let final_position = calculate_final_position(parse(input)?);
     println!("{}", final_position);
+    Ok(())
 }
 
 #[cfg(test)]
@@ -65,7 +84,7 @@ mod tests {
     #[test]
     fn test() {
         let input = "forward 5\ndown 5\nforward 8\nup 3\ndown 8\nforward 2";
-        let result = calculate_final_position(parse(input));
+        let result = calculate_final_position(parse(input).unwrap());
         assert_eq!(result, 150);
     }
 }
