@@ -3,63 +3,51 @@ fn parse(input: &str) -> Option<Vec<Vec<u32>>> {
         .lines()
         .map(|line| {
             line.chars()
-                .map(|c| c.to_digit(10))
+                .map(|c| c.to_digit(2))
                 .collect::<Option<Vec<_>>>()
         })
         .collect()
 }
 
-fn to_u32(slice: std::vec::Vec<u32>) -> u32 {
-    slice.iter().fold(0, |acc, &b| acc * 2 + b)
+fn to_u32(vec: Vec<u32>) -> u32 {
+    vec.iter().fold(0, |acc, &b| acc * 2 + b)
 }
 
-fn calculate_oxygen_generator_rating(diagnostic_report: Vec<Vec<u32>>, index: usize) -> Vec<u32> {
+fn calculate_rating(
+    diagnostic_report: &Vec<Vec<u32>>,
+    condition: fn(length: usize, column_sum: usize) -> bool,
+    index: usize,
+) -> Vec<u32> {
     let length = diagnostic_report.len();
     if length == 1 {
         return diagnostic_report[0].clone();
     }
-    let column_sum: u32 = diagnostic_report.iter().map(|line| line[index]).sum();
-    let filter_digit = if (length - column_sum as usize) <= column_sum as usize {
-        1
-    } else {
-        0
-    };
-    calculate_oxygen_generator_rating(
-        diagnostic_report
+    let column_sum = diagnostic_report
+        .iter()
+        .map(|line| line[index])
+        .sum::<u32>() as usize;
+    let filter_digit = if condition(length, column_sum) { 1 } else { 0 };
+    calculate_rating(
+        &diagnostic_report
             .iter()
             .filter(|line| line[index] == filter_digit)
             .map(|line| line.clone())
             .collect(),
-        index + 1,
-    )
-}
-
-fn calculate_co2_scrubber_rating(diagnostic_report: Vec<Vec<u32>>, index: usize) -> Vec<u32> {
-    let length = diagnostic_report.len();
-    if length == 1 {
-        return diagnostic_report[0].clone();
-    }
-    let column_sum: u32 = diagnostic_report.iter().map(|line| line[index]).sum();
-    let filter_digit = if length - column_sum as usize > column_sum as usize {
-        1
-    } else {
-        0
-    };
-    calculate_co2_scrubber_rating(
-        diagnostic_report
-            .iter()
-            .filter(|line| line[index] == filter_digit)
-            .map(|line| line.clone())
-            .collect(),
+        condition,
         index + 1,
     )
 }
 
 fn calculate_life_support_rating(diagnostic_report: Vec<Vec<u32>>) -> u32 {
-    to_u32(calculate_oxygen_generator_rating(
-        diagnostic_report.clone(),
+    to_u32(calculate_rating(
+        &diagnostic_report,
+        |length, column_sum| length - column_sum <= column_sum,
         0,
-    )) * to_u32(calculate_co2_scrubber_rating(diagnostic_report, 0))
+    )) * to_u32(calculate_rating(
+        &diagnostic_report,
+        |length, column_sum| length - column_sum > column_sum,
+        0,
+    ))
 }
 
 fn main() {
