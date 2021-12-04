@@ -13,7 +13,7 @@ fn to_u32(vec: Vec<u32>) -> u32 {
     vec.iter().fold(0, |acc, &b| acc * 2 + b)
 }
 
-fn calculate_rating(
+fn calculate_rating_helper(
     diagnostic_report: &Vec<Vec<u32>>,
     condition: fn(length: usize, column_sum: usize) -> bool,
     index: usize,
@@ -27,7 +27,7 @@ fn calculate_rating(
         .map(|line| line[index])
         .sum::<u32>() as usize;
     let filter_digit = if condition(length, column_sum) { 1 } else { 0 };
-    calculate_rating(
+    calculate_rating_helper(
         &diagnostic_report
             .iter()
             .filter(|line| line[index] == filter_digit)
@@ -38,15 +38,20 @@ fn calculate_rating(
     )
 }
 
+fn calculate_rating(
+    diagnostic_report: &Vec<Vec<u32>>,
+    condition: fn(length: usize, column_sum: usize) -> bool,
+) -> Vec<u32> {
+    calculate_rating_helper(diagnostic_report, condition, 0)
+}
+
 fn calculate_life_support_rating(diagnostic_report: Vec<Vec<u32>>) -> u32 {
     to_u32(calculate_rating(
         &diagnostic_report,
         |length, column_sum| length - column_sum <= column_sum,
-        0,
     )) * to_u32(calculate_rating(
         &diagnostic_report,
         |length, column_sum| length - column_sum > column_sum,
-        0,
     ))
 }
 
