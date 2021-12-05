@@ -53,7 +53,7 @@ fn get_points_in_line(line: &Line) -> Vec<Point> {
     vec![]
 }
 
-fn calculate_number_of_points_with_overlapping_lines(lines: &Vec<Line>) -> Option<usize> {
+fn calculate_number_of_points_with_overlapping_lines(lines: &Vec<Line>) -> usize {
     let mut points_with_line_count = HashMap::new();
     for line in lines
         .iter()
@@ -64,12 +64,11 @@ fn calculate_number_of_points_with_overlapping_lines(lines: &Vec<Line>) -> Optio
         }
         // print_points_with_line_count(&points_with_line_count);
     }
-    Some(
-        points_with_line_count
-            .iter()
-            .filter(|(_, count)| **count > 1)
-            .count(),
-    )
+
+    points_with_line_count
+        .iter()
+        .filter(|(_, count)| **count > 1)
+        .count()
 }
 
 fn print_points_with_line_count(points: &HashMap<Point, i32>) -> Option<()> {
@@ -102,7 +101,7 @@ fn print_points_with_line_count(points: &HashMap<Point, i32>) -> Option<()> {
 fn main() -> Result<(), ()> {
     let input = include_str!("../input");
     let parsed = parse(input).ok_or(())?;
-    let result = calculate_number_of_points_with_overlapping_lines(&parsed).ok_or(())?;
+    let result = calculate_number_of_points_with_overlapping_lines(&parsed);
     println!("{}", result);
     Ok(())
 }
@@ -116,7 +115,7 @@ mod tests {
         let input =
             "0,9 -> 5,9\n8,0 -> 0,8\n9,4 -> 3,4\n2,2 -> 2,1\n7,0 -> 7,4\n6,4 -> 2,0\n0,9 -> 2,9\n3,4 -> 1,4\n0,0 -> 8,8\n5,5 -> 8,2";
         let parsed = parse(input).unwrap();
-        let result = calculate_number_of_points_with_overlapping_lines(&parsed).unwrap();
+        let result = calculate_number_of_points_with_overlapping_lines(&parsed);
         assert_eq!(result, 5);
     }
 }
