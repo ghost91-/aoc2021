@@ -30,15 +30,15 @@ fn parse(input: &str) -> Option<Vec<Line>> {
 }
 
 fn get_points_in_line(line: &Line) -> Vec<Point> {
-    let x_direction = (line.1 .0 - line.0 .0).signum();
-    let y_direction = (line.1 .1 - line.0 .1).signum();
+    let delta_x = (line.1 .0 - line.0 .0).signum();
+    let delta_y = (line.1 .1 - line.0 .1).signum();
     let mut points = vec![];
     let mut x = line.0 .0;
     let mut y = line.0 .1;
     while (x, y) != line.1 {
         points.push((x, y));
-        x += x_direction;
-        y += y_direction;
+        x += delta_x;
+        y += delta_y;
     }
     points.push(line.1);
     points
