@@ -6,13 +6,8 @@ struct LanternfishPopulation {
 impl LanternfishPopulation {
     fn advance_days(self: &mut Self, days: usize) {
         for _ in 0..days {
-            let fish_on_0 = self.fish_per_reproduction_timer[0];
-            for i in 0..6 {
-                self.fish_per_reproduction_timer[i] = self.fish_per_reproduction_timer[i + 1];
-            }
-            self.fish_per_reproduction_timer[6] = fish_on_0 + self.fish_per_reproduction_timer[7];
-            self.fish_per_reproduction_timer[7] = self.fish_per_reproduction_timer[8];
-            self.fish_per_reproduction_timer[8] = fish_on_0;
+            self.fish_per_reproduction_timer.rotate_left(1);
+            self.fish_per_reproduction_timer[6] += self.fish_per_reproduction_timer[8];
         }
     }
 
